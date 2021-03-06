@@ -1,0 +1,16 @@
+{
+	"Name": "Test",
+	"Star": 1,
+	"Difficulty": "easy",
+	"Music": "none",
+	"Mode": "cube",
+	"Code": [
+		{"Object": "Nspike1", "xo": 18, "yo": 0, "size": 45},
+		{"Object": "Nspike1", "xo": 33, "yo": 0, "size": 45},
+		{"Object": "Nspike1", "xo": 34, "yo": 0, "size": 45},
+		{"Object": "Nspike1", "xo": 49, "yo": 0, "size": 45},
+		{"Object": "Nspike1", "xo": 50, "yo": 0, "size": 45},
+		{"Object": "Nblock1", "xo": 51, "yo": 0, "size": 45},
+		{"Object": "Nblock1", "xo": 55, "yo": 0, "size": 45}
+	]
+}

@@ -1,0 +1,5 @@
+pygame
+keyboard
+math
+tkinter
+PIL
