@@ -7,6 +7,8 @@ from tkinter import *
 import time
 import json
 from PIL import Image, ImageDraw
+import os
+
 
 code = ''
 
@@ -28,12 +30,14 @@ cam = {
 
 edit = {
 	'mode': 0,
-	'select': 'none'
+	'select': 'none',
+	'rule': False
 }
 
 main = 'main'
 nameS = 0
 
+op = ''
 # code = [{'name': 'Name Test'}, 'Music', [{'Object': 'Nblock1', 'x': 90, 'y': -45, 'size': 45}, {'Object': 'text', 'x': 135, 'y': -90, 'size': 45, 'caption': 'Hello!', 'color': (0, 0, 0)}, {'Object': 'Nblock1', 'x': 135, 'y': -45, 'size': 45}, {'Object': 'Nblock1', 'x': 270, 'y': -90, 'size': 45}]]
 
 ColorP = ['#ffff00','#00c8ff']
@@ -70,6 +74,55 @@ pygame.display.update()
 pygame.display.set_caption("Geometry Dash DL")
 clock = pygame.time.Clock()
 GameP = True
+
+def text(caption, x, y, font, fontSize, fontColor):
+	fonts = pygame.font.Font(font, fontSize)
+	display.blit(render(caption, fonts, gfcolor = fontColor), (x, y))
+
+def button(caption, x, y, font, fontSize, fontColor, name, colorB = [(0, 200, 0), (0, 150, 0)], colorBS = [(200, 200, 0), (150, 150, 0)], sizes = 0, ico = 'none'):
+	global nameS
+	global mouseP
+	if sizes == 0:
+		sizeex = 10 + (len(caption)*(fontSize))
+		sizeey = (fontSize)+10
+	else:
+		sizeex = sizes[0]
+		sizeey = sizes[1]
+	
+	if mouseP[0] > x - (sizeex/2) and mouseP[0] < x + (sizeex/2) and mouseP[1] > y - (sizeey/2) and mouseP[1] < y + (sizeey/2):
+		if ico == 'none':
+			pygame.draw.rect(display, colorBS[1], [
+							x-(sizeex/2)-5,
+							y-(sizeey/2)-5,
+							sizeex+10,
+							sizeey+10])
+			pygame.draw.rect(display, colorBS[0], [
+							x-(sizeex/2),
+							y-(sizeey/2),
+							sizeex,
+							sizeey])
+		if event.type == pygame.MOUSEBUTTONDOWN:
+			nameS = name
+			time.sleep(0.1)
+		else:
+			nameS = 0
+	else:
+		if ico == 'none':
+			pygame.draw.rect(display, colorB[1], [
+							x-(sizeex/2)-5,
+							y-(sizeey/2)-5,
+							sizeex+10,
+							sizeey+10])
+			pygame.draw.rect(display, colorB[0], [
+							x-(sizeex/2),
+							y-(sizeey/2),
+							sizeex,
+							sizeey])
+	if ico != 'none':
+		icoI = pygame.image.load('Resources\\' + ico).convert_alpha()
+		display.blit(icoI, (x-(sizeex/2), y-(sizeey/2), 0, 0))
+	text(caption, x-(sizeex/4), y-(sizeey/4), font, fontSize, fontColor)
+
 
 _circle_cache = {}
 def _circlepoints(r):
@@ -120,31 +173,88 @@ def jsons(pui):
 	main = 'game'
 	edit['Mode'] = 0
 
+ends = 0 
+
+
+
+
+
 def editor():
+	global mouseP
+	global cam
+	global op
+	if event.type == pygame.MOUSEBUTTONDOWN and edit['select'] != 'none' and round((mouseP[0]-cam['x']-22.5)/45) > -1 and -1*(round((mouseP[1]-cam['y']-22.5)/45)) > -1 and mouseP[1] < height-150 and mouseP[1] > 80:
+		if edit['select'] != 'Del':
+			code['Code'].append({'Object': edit['select'], 'xo': round((mouseP[0]-cam['x']-22.5)/45), 'yo': -1*(round((mouseP[1]-cam['y']-22.5)/45)), 'size': 45})
+		else:
+			for s in range(0, len(code['Code'])):
+				if code['Code'][s]['xo'] == round((mouseP[0]-cam['x']-22.5)/45) and code['Code'][s]['yo'] == -1*(round((mouseP[1]-cam['y']-22.5)/45)):
+					code['Code'].pop(s)
+					break
+		time.sleep(0.1)
 	s = pygame.Surface((width,height-150), pygame.SRCALPHA)
 	s.fill((0,0,0,128))                       
 	display.blit(s, (0, height-150))
 	cam['x'] = cam['vx']
 	cam['y'] = cam['vy'] + height-300
-	if keyboard.is_pressed('left arrow'):
+	if keyboard.is_pressed('left arrow') or keyboard.is_pressed('a'):
 		cam['vx'] += 10
-	if keyboard.is_pressed('right arrow'):
+	if keyboard.is_pressed('right arrow') or keyboard.is_pressed('d'):
 		cam['vx'] -= 10
-	if keyboard.is_pressed('up arrow'):
+	if keyboard.is_pressed('up arrow') or keyboard.is_pressed('w'):
 		cam['vy'] += 10
-	if keyboard.is_pressed('down arrow'):
+	if keyboard.is_pressed('down arrow') or keyboard.is_pressed('s'):
 		cam['vy'] -= 10
-	button('Block', width/2, height/1.2, 'PUSAB.otf', 24, (0, 0, 0), 'ED Nblock1')
+	button('Block', width/2, height/1.2, 'PUSAB.otf', 24, (255, 255, 255), 'ED Nblock1')
 	if nameS == 'ED Nblock1':
 		edit['select'] = nameS[3:]
-	button('Spike', width/2, height/1.2+45, 'PUSAB.otf', 24, (0, 0, 0), 'ED Nspike1')
+	button('Spike', width/2, height/1.2+45, 'PUSAB.otf', 24, (255, 255, 255), 'ED Nspike1')
 	if nameS == 'ED Nspike1':
 		edit['select'] = nameS[3:]
+	button('Delete', width/2, height/1.2+90, 'PUSAB.otf', 24, (255, 255, 255), 'ED Del', colorB = [(250, 0, 0), (200, 0, 0)])
+	if nameS == 'ED Del':
+		edit['select'] = nameS[3:]
+	button('Save', width/1.1 - 200, 45, 'PUSAB.otf', 24, (255, 255, 255), 'ED Save')
+	if nameS == 'ED Save':
+		try:
+			with open(op, 'w') as outfile:
+				json.dump(code, outfile)
+		except Exception:
+			window = Tk()
+			window.title("Loading")
+			window.geometry('0x0')
+			window.fileName = filedialog.asksaveasfilename(
+                defaultextension='.json', filetypes=[("json files", '*.json')],
+                title="Choose filename")			
+			opt = window.fileName
+			try:
+				with open(opt, 'w') as outfile:
+					json.dump(code, outfile)
+				op = opt
+			except Exception:
+				pass
+			window.destroy()
+	button('Save As', width/1.1 - 25, 45, 'PUSAB.otf', 24, (255, 255, 255), 'ED SaveAs')
+	if nameS == 'ED SaveAs':
+		window = Tk()
+		window.title("Loading")
+		window.geometry('0x0')
+		window.fileName = filedialog.asksaveasfilename(
+          	    defaultextension='.json', filetypes=[("json files", '*.json')],
+          	    title="Choose filename")			
+		opt = window.fileName
+		try:
+			with open(opt, 'w') as outfile:
+				json.dump(code, outfile)
+			op = opt
+		except Exception:
+			pass
+		window.destroy()
+		
 	# button('Text', width/2, height/1.2+90, 'PUSAB.otf', 24, (0, 0, 0), 'ED text')
 	# if nameS == 'ED text':
 	# 	edit['select'] = nameS[3:]
-	if event.type == pygame.MOUSEBUTTONDOWN:
-		code[2].append({'Object': edit['select'], 'x': -1*(cam['x']) + round(mouseP[0]/45)*45, 'y': -1*(cam['y']) + round(mouseP[1]/45)*45, 'size': 45})
+	
 rusts = 0
 def peCColor(types, colorRGB, name, u):
 			global rusts
@@ -158,106 +268,74 @@ def peCColor(types, colorRGB, name, u):
 				PlayerIco()
 			rusts += 1
 
-def button(caption, x, y, font, fontSize, fontColor, name, colorB = [(0, 200, 0), (0, 150, 0)], colorBS = [(200, 200, 0), (150, 150, 0)], sizes = 0):
-	global nameS
-	global mouseP
-	if sizes == 0:
-		sizeex = 10 + (len(caption)*(fontSize))
-		sizeey = (fontSize)+10
-	else:
-		sizeex = sizes[0]
-		sizeey = sizes[1]
-	
-	if mouseP[0] > x - (sizeex/2) and mouseP[0] < x + (sizeex/2) and mouseP[1] > y - (sizeey/2) and mouseP[1] < y + (sizeey/2):
-		pygame.draw.rect(display, colorBS[1], [
-						x-(sizeex/2)-5,
-						y-(sizeey/2)-5,
-						sizeex+10,
-						sizeey+10])
-		pygame.draw.rect(display, colorBS[0], [
-						x-(sizeex/2),
-						y-(sizeey/2),
-						sizeex,
-						sizeey])
-		if event.type == pygame.MOUSEBUTTONDOWN:
-			nameS = name
-			time.sleep(0.1)
-		else:
-			nameS = 0
-	else:
-		pygame.draw.rect(display, colorB[1], [
-						x-(sizeex/2)-5,
-						y-(sizeey/2)-5,
-						sizeex+10,
-						sizeey+10])
-		pygame.draw.rect(display, colorB[0], [
-						x-(sizeex/2),
-						y-(sizeey/2),
-						sizeex,
-						sizeey])
-	text(caption, x-(sizeex/4), y-(sizeey/4), font, fontSize, fontColor)
-	
 
-def text(caption, x, y, font, fontSize, fontColor):
-    # font2 = pygame.font.Font(font, fontSize+5)
-    # text2 = font2.render(caption, True, (0, 0, 0))
-    # place2 = text2.get_rect(center=(x, y))
-    # display.blit(text2, place2)
-    # font1 = pygame.font.Font(font, fontSize)
-    # text1 = font1.render(caption, True, (fontColor))
-    # place1 = text1.get_rect(center=(x, y))
-    # display.blit(text1, place1)
-	fonts = pygame.font.Font(font, fontSize)
-	display.blit(render(caption, fonts, gfcolor = fontColor), (x, y))
+	
+end = []
+
 
 def Objects():
+	global ends
+	global end
 	global toch
-	for i in range(0, len(code['Code'])):
-		xs = code['Code'][i].get('x')
-		xs2 = code['Code'][i].get('xo')
-		ys = code['Code'][i].get('y')
-		ys2 = code['Code'][i].get('yo')
-		xs3 = 0
-		ys3 = 0
-		if xs != None:
-			xs3 += xs
-		if xs2 != None:
-			xs3 += xs2*code['Code'][i]['size']
-		if ys != None:
-			ys3 += ys
-		if ys2 != None:
-			ys3 += ys2*code['Code'][i]['size']
+	end = []
+	if len(code['Code']) != 0:
+		for i in range(0, len(code['Code'])):
+			xs = code['Code'][i].get('x')
+			xs2 = code['Code'][i].get('xo')
+			ys = code['Code'][i].get('y')
+			ys2 = code['Code'][i].get('yo')
+			xs3 = 0
+			ys3 = 0
+			if xs != None:
+				xs3 += xs
+			if xs2 != None:
+				xs3 += xs2*code['Code'][i]['size']
+			if ys != None:
+				ys3 += ys
+			if ys2 != None:
+				ys3 += ys2*code['Code'][i]['size']
 
 
 
 
 
-		Temp = [code['Code'][i]['Object'], xs3, ys3, code['Code'][i]['size']]
-		if Temp[0] == 'Nblock1':
-			display.blit(Nblock1img, (cam['x'] + Temp[1], cam['y'] + Temp[2], Temp[3], Temp[3]))
-			if player['y'] > Temp[2] - Temp[3] - Temp[3]/8 and player['y'] < Temp[2] + Temp[3]/2 and player['x'] < Temp[1] + Temp[3] - Temp[3]/6 - 1 and player['x'] > Temp[1] - Temp[3] + Temp[3]/6 + 1:
-				if player['y'] > Temp[2] - Temp[3] and player['y'] < Temp[2] + Temp[3]/2 and player['x'] < Temp[1] + Temp[3] - Temp[3]/8 - 1 and player['x'] > Temp[1] - Temp[3] + Temp[3]/8 + 1:
-					player['y'] = Temp[2] - Temp[3]
-					player['vy'] = -1
-					toch += 1
-			else:
-				if player['x'] < Temp[1] + Temp[3] + 1 and player['x'] > Temp[1] - Temp[3]/2 and player['y'] > Temp[2] - Temp[3] + Temp[3]/8 + 1 and player['y'] < Temp[2] + Temp[3] - Temp[3]/8 - 1:
-					player['x'] = Temp[1] + Temp[3]
-				if player['x'] < Temp[1] + Temp[3]/2 and player['x'] > Temp[1] - Temp[3] - 1 and player['y'] > Temp[2] - Temp[3] + Temp[3]/8 + 1 and player['y'] < Temp[2] + Temp[3] - Temp[3]/8 - 1:
-					player['x'] = Temp[3]
-				if player['y'] > Temp[2] - Temp[3]/2 and player['y'] < Temp[2] + Temp[3] - 1 and player['x'] < Temp[1] + Temp[3] - Temp[3]/8 - 1 and player['x'] > Temp[1] - Temp[3] + Temp[3]/8 + 1:
-					player['y'] = Temp[2]
-		if Temp[0] == 'Nspike1':
-			# pygame.draw.rect(display, (0, 125, 255), [
-			# 		cam['x'] + code[2][i]['x'],
-			# 		cam['y'] + code[2][i]['y'],
-			# 		code[2][i]['size'],
-			# 		code[2][i]['size']])
-			display.blit(Nspike1img, (cam['x'] + Temp[1], cam['y'] + Temp[2], Temp[3], Temp[3]))
-			if player['x'] > Temp[1] - (Temp[3]/1.25) and player['x'] < Temp[1] + (Temp[3]/1.25) and player['y'] > Temp[2] - Temp[3] and player['y'] < Temp[2] + (Temp[3]/1.25):
-				player['x'] = 0
-		if Temp[0] == 'text':
-			text(code['Code'][i]['caption'], cam['x'] + Temp[1], cam['y'] - Temp[1], 'PUSAB.otf', Temp[3], code['Code'][i]['color'])
+			Temp = [code['Code'][i]['Object'], xs3, ys3*-1, code['Code'][i]['size']]
+			if Temp[0] == 'Nblock1':
+				display.blit(Nblock1img, (cam['x'] + Temp[1], cam['y'] + Temp[2], Temp[3], Temp[3]))
+				if player['y'] > Temp[2] - Temp[3] - Temp[3]/8 and player['y'] < Temp[2] + Temp[3]/2 and player['x'] < Temp[1] + Temp[3] - Temp[3]/6 - 1 and player['x'] > Temp[1] - Temp[3] + Temp[3]/6 + 1:
+					if player['y'] > Temp[2] - Temp[3] and player['y'] < Temp[2] + Temp[3]/2 and player['x'] < Temp[1] + Temp[3] - Temp[3]/8 - 1 and player['x'] > Temp[1] - Temp[3] + Temp[3]/8 + 1:
+						player['y'] = Temp[2] - Temp[3]
+						player['vy'] = -1
+						toch += 1
+				else:
+					if player['x'] < Temp[1] + Temp[3] + 1 and player['x'] > Temp[1] - Temp[3]/2 and player['y'] > Temp[2] - Temp[3] + Temp[3]/8 + 1 and player['y'] < Temp[2] + Temp[3] - Temp[3]/8 - 1:
+						player['x'] = Temp[1] + Temp[3]
+					if player['x'] < Temp[1] + Temp[3]/2 and player['x'] > Temp[1] - Temp[3] - 1 and player['y'] > Temp[2] - Temp[3] + Temp[3]/8 + 1 and player['y'] < Temp[2] + Temp[3] - Temp[3]/8 - 1:
+						player['x'] = Temp[1] - Temp[3]
+					if player['y'] > Temp[2] - Temp[3]/2 and player['y'] < Temp[2] + Temp[3] - 1 and player['x'] < Temp[1] + Temp[3] - Temp[3]/8 - 1 and player['x'] > Temp[1] - Temp[3] + Temp[3]/8 + 1:
+						player['y'] = Temp[2]
+			if Temp[0] == 'Nspike1':
+				# pygame.draw.rect(display, (0, 125, 255), [
+				# 		cam['x'] + code[2][i]['x'],
+				# 		cam['y'] + code[2][i]['y'],
+				# 		code[2][i]['size'],
+				# 		code[2][i]['size']])
+				display.blit(Nspike1img, (cam['x'] + Temp[1], cam['y'] + Temp[2], Temp[3], Temp[3]))
+				if player['x'] > Temp[1] - (Temp[3]/1.25) and player['x'] < Temp[1] + (Temp[3]/1.25) and player['y'] > Temp[2] - Temp[3] and player['y'] < Temp[2] + (Temp[3]/1.25):
+					player['x'] = 0
+			if Temp[0] == 'text':
+				text(code['Code'][i]['caption'], cam['x'] + Temp[1], cam['y'] - Temp[1], 'PUSAB.otf', Temp[3], code['Code'][i]['color'])
+			end.append(Temp[1])
+		ends = max(end)
+		ends += 45*10
+		if edit['mode'] == 0:
+			pygame.draw.rect(display, (0, 0, 0), [
+							cam['x'] + ends,
+							0,
+							1000,
+							height])
+			text('END', cam['x'] + ends + 50, height/2, 'PUSAB.otf', 36, (255, 255, 255))
+
 			
 Nblock1img = pygame.image.load('Resources\\Objects\\Nblock1.png').convert_alpha()
 Nspike1img = pygame.image.load('Resources\\Objects\\Nspike1.png').convert_alpha()
@@ -278,18 +356,24 @@ Logo = pygame.transform.scale(Logo, (round(lw), round(lh)))
 BGimg = pygame.image.load('Resources\\BG.png').convert_alpha()
 BGIimg = pygame.transform.flip(BGimg, True, False)
 Fimg = pygame.image.load('Resources\\flor.png').convert_alpha()
+FAimg = pygame.image.load('Resources\\florAD.png').convert_alpha()
 
 
 cam['y'] = 500
 
 def players():
+	global ends
+
 	if player['y'] > (45*-5):
 		cam['y'] = 500
 	else:
 		cam['y'] = -1*(player['y'] - (height-150))-150
 	# cam['x'] = -1*(player['x'] - 200)
 	# cam['x'] = -1*((player['x']) -200)
-	cam['x'] -= (-1*((player['x'])-200) + cam['x'])/8 - (-1*((player['x'])-200)/4)
+	if player['x'] > ends-45*10:
+		cam['x'] = -1*(ends-45*17.5)
+	else:
+		cam['x'] -= (-1*((player['x'])-200) + cam['x'])/8 - (-1*((player['x'])-200)/4)
 	cam['y'] -= (-1*(player['y'] - (height-150))-750 + cam['y'])/8 - ((-1*(player['y'] - (height-150))-750 + cam['y'])/4)
 	global toch
 	# pygame.draw.rect(display, (0, 255, 0), [
@@ -300,9 +384,9 @@ def players():
 	Pico = (cam['x'] + player['x'], cam['y'] + player['y'], 45, 45)
 	display.blit(Pimg, Pico)
 
-	if keyboard.is_pressed('left arrow'):
+	if keyboard.is_pressed('left arrow') or keyboard.is_pressed('a'):
 		player['x'] -= player['vx']/(fps/30)
-	if keyboard.is_pressed('right arrow'):
+	if keyboard.is_pressed('right arrow') or keyboard.is_pressed('d'):
 		player['x'] += player['vx']/(fps/30)
 	player['y'] -= player['vy']
 	if player['vy'] != 0:
@@ -315,25 +399,36 @@ def players():
 		player['vy'] = 0
 	if player['y'] > -1:
 		toch += 1
-	if (keyboard.is_pressed('space') or keyboard.is_pressed('up arrow')) and toch != 0:
+	if (keyboard.is_pressed('space') or keyboard.is_pressed('up arrow') or keyboard.is_pressed('w') or event.type == pygame.MOUSEBUTTONDOWN) and toch != 0:
 		player['y'] -= 1
 		player['vy'] += 30
 
+
 def games():
+	global main
+	if player['x'] > ends:
+		if edit['rule'] == True:
+			edit['mode'] = 1
+		else:
+			main = 'main'
 	Objects()
 	if edit['mode'] == 1:
 		editor()
 	else:
 		players()
-	# if edit['mode'] == 1:
-	# 	button('Play', 90, 45, 'PUSAB.otf', 24, (0, 0, 0), 'ED')
-	# else:
-	# 	button('Edit', 90, 45, 'PUSAB.otf', 24, (0, 0, 0), 'ED')
-	# if nameS == 'ED':
-	# 	if edit['mode'] == 1:
-	# 		edit['mode'] = 0
-	# 	else:
-	# 		edit['mode'] = 1
+	if edit['rule']:
+		if edit['mode'] == 1:
+			button('Play', 135, 45, 'PUSAB.otf', 24, (255, 255, 255), 'ED')
+		else:
+			button('Edit', 135, 45, 'PUSAB.otf', 24, (255, 255, 255), 'ED')
+		if nameS == 'ED':
+			if edit['mode'] == 1:
+				player['x'] = 0
+				player['y'] = 0
+				player['vy'] = -1
+				edit['mode'] = 0
+			else:
+				edit['mode'] = 1
 def PlayerIco():
 	global Pimg
 	img = Image.open('Resources\\Players\\ico4.png')
@@ -370,21 +465,25 @@ while GameP:
 		if event.type == pygame.QUIT:
 			GameP = False
 	display.fill((0,0,0))
-	for x in range(-1, 4):
+	for x in range(-1, 7):
 		BGico = (cam['x']/4 - 250 + (1000*x), cam['y']/2 - 500, 100, 100)
 		if x%2 == 0:
 			display.blit(BGimg, BGico)
 		else:
 			display.blit(BGIimg, BGico)
 	
-	for x in range(-1, 7):
+	for x in range(-1, 15):
 		Fico = (cam['x'] - 250 + (1000*x), cam['y'] + 45, 100, 100)
 		display.blit(Fimg, Fico)
 
+	
 
 	s = pygame.Surface((width,height), pygame.SRCALPHA)
 	s.fill((0,0,255,125))                       
 	display.blit(s, (0, 0))
+
+	FAico = (width/2-400, cam['y'] + 44, 0, 0)
+	display.blit(FAimg, FAico)
 
 	if main == 'pe':
 		button('<', 45, 45, 'PUSAB.otf', 36, (255, 255, 255), 'BACKmain', sizes = [45, 45])
@@ -459,30 +558,111 @@ while GameP:
 		button('<', 45, 45, 'PUSAB.otf', 36, (255, 255, 255), 'BACKmain', sizes = [45, 45])
 		if nameS == 'BACKmain':
 			main = 'main'
-	
-	if main == 'main':
-		Logoico = (width/2-1486/4, height/4-399/4, 0, 0)
-		display.blit(Logo, Logoico)
-		button('Play', width/2, height/2+100, 'PUSAB.otf', 24, (255, 255, 255), 'play')
-		if nameS == 'play':
-			# main = 'Company'
-			jsons("Level\\Company\\Stereo Madness.json")
-		button('Import', width/2 + width/4, height/2+100, 'PUSAB.otf', 24, (255, 255, 255), 'edit')
-		if nameS == 'edit':
+			if edit['rule'] == True:
+				try:
+					with open(op, 'w') as outfile:
+						json.dump(code, outfile)
+				except Exception:
+					window = Tk()
+					window.title("Loading")
+					window.geometry('0x0')
+					window.fileName = filedialog.asksaveasfilename(
+		                defaultextension='.json', filetypes=[("json files", '*.json')],
+		                title="Choose filename")			
+					opt = window.fileName
+					try:
+						with open(opt, 'w') as outfile:
+							json.dump(code, outfile)
+						op = opt
+					except Exception:
+						pass
+					window.destroy()
+
+	if main == 'more':
+		button('<', 45, 45, 'PUSAB.otf', 36, (255, 255, 255), 'BACKmain', sizes = [45, 45])
+		if nameS == 'BACKmain':
+			main = 'main'
+
+		button('Create', width/2, height/2, 'PUSAB.otf', 24, (255, 255, 255), 'createED')
+		if nameS == 'createED':
+				code = {
+				 "Name": "Test",
+				 "Star": 1, 
+				 "Difficulty": "easy",
+				 "Music": "none", 
+				 "Mode": "cube", 
+				 "Code": []
+				}
+				
+				edit['rule'] = True
+				edit['mode'] = 1
+				player['x'] = 0
+				player['y'] = 0
+				player['vy'] = -1
+				main = 'game'
+				put = ''
+
+
+		button('Open', width/2, height/2+65, 'PUSAB.otf', 24, (255, 255, 255), 'OpenED')
+		if nameS == 'OpenED':
 			window = Tk()
 			window.title("Loading")
 			window.geometry('0x0')
 			window.fileName = filedialog.askopenfilename(filetypes=(("Map Json", ".json"),   ("All Files", "*.*")))
 			op = window.fileName
-			jsons(op)
-			window.destroy()
-		button('Player', width/4, height/2+100, 'PUSAB.otf', 24, (255, 255, 255), 'pe')
+			try:
+				jsons(op)
+				window.destroy()
+				edit['rule'] = True
+				edit['mode'] = 1
+				player['x'] = 0
+				player['y'] = 0
+				player['vy'] = -1
+			except Exception:
+				window.destroy()
+
+
+	
+	if main == 'main':
+		Logoico = (width/2-1486/4, height/4-399/4, 0, 0)
+		display.blit(Logo, Logoico)
+		button('', width/2-5, height/2+100, 'PUSAB.otf', 24, (255, 255, 255), 'play', sizes = [150, 150], ico = "main\\Play.png")
+		if nameS == 'play':
+			jsons("Level\\Company\\Stereo Madness.json")
+			edit['rule'] = False
+			edit['mode'] = 0
+			player['x'] = 0
+			player['y'] = 0
+			player['vy'] = -1
+		button('', width - width/3.25, height/2+100, 'PUSAB.otf', 24, (255, 255, 255), 'mores', sizes = [125, 125], ico = "main\\More.png")
+		if nameS == 'mores':
+			main = 'more'
+			
+		button('', width/3.25, height/2+100, 'PUSAB.otf', 24, (255, 255, 255), 'pe', sizes = [125, 125], ico = "main\\Skins.png")
 		if nameS == 'pe':
 			main = 'pe'
+		button('Import', width/2, height/1.2, 'PUSAB.otf', 24, (255, 255, 255), 'import')
+		if nameS == 'import':
+			window = Tk()
+			window.title("Loading")
+			window.geometry('0x0')
+			window.fileName = filedialog.askopenfilename(filetypes=(("Map Json", ".json"),   ("All Files", "*.*")))
+			op = window.fileName
+			try:
+				jsons(op)
+				window.destroy()
+				edit['rule'] = False
+				edit['mode'] = 0
+				player['x'] = 0
+				player['y'] = 0
+				player['vy'] = -1
+			except Exception:
+				window.destroy()
+		text('By: DL', 20, height - 45, 'PUSAB.otf', 24, (0, 200, 0))
 
 	
 		
-	text('v0.1', width/2-30, 24*1, 'PUSAB.otf', 24, (255, 255, 0))
+	text('v0.2', width/2-30, 24*1, 'PUSAB.otf', 24, (255, 255, 0))
 
 	# text('Mouse X: ' + str(mouseP[0]), width/2, 24*3, 'PUSAB.otf', 24, (0, 0, 0))
 	# text('Mouse Y: ' + str(mouseP[1]), width/2, 24*4, 'PUSAB.otf', 24, (0, 0, 0))
@@ -499,6 +679,7 @@ while GameP:
 	# 	display.blit(s, (width/5, height/4))
 	# 	text('Stereo Madness', width/2-200, height/4+height/8, 'PUSAB.otf', 36, (255, 255, 255))
 
+	
 	
 
 	pygame.display.update()
