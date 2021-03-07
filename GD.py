@@ -79,7 +79,7 @@ def text(caption, x, y, font, fontSize, fontColor):
 	fonts = pygame.font.Font(font, fontSize)
 	display.blit(render(caption, fonts, gfcolor = fontColor), (x, y))
 
-def button(caption, x, y, font, fontSize, fontColor, name, colorB = [(0, 200, 0), (0, 150, 0)], colorBS = [(200, 200, 0), (150, 150, 0)], sizes = 0, ico = 'none'):
+def button(caption, x, y, font, fontSize, fontColor, name, colorB = [(0, 200, 0), (0, 150, 0)], colorBS = [(200, 200, 0), (150, 150, 0)], sizes = 0, ico = 'none', inv = 0):
 	global nameS
 	global mouseP
 	if sizes == 0:
@@ -90,7 +90,7 @@ def button(caption, x, y, font, fontSize, fontColor, name, colorB = [(0, 200, 0)
 		sizeey = sizes[1]
 	
 	if mouseP[0] > x - (sizeex/2) and mouseP[0] < x + (sizeex/2) and mouseP[1] > y - (sizeey/2) and mouseP[1] < y + (sizeey/2):
-		if ico == 'none':
+		if inv == 0:
 			pygame.draw.rect(display, colorBS[1], [
 							x-(sizeex/2)-5,
 							y-(sizeey/2)-5,
@@ -107,7 +107,7 @@ def button(caption, x, y, font, fontSize, fontColor, name, colorB = [(0, 200, 0)
 		else:
 			nameS = 0
 	else:
-		if ico == 'none':
+		if inv == 0:
 			pygame.draw.rect(display, colorB[1], [
 							x-(sizeex/2)-5,
 							y-(sizeey/2)-5,
@@ -121,7 +121,7 @@ def button(caption, x, y, font, fontSize, fontColor, name, colorB = [(0, 200, 0)
 	if ico != 'none':
 		icoI = pygame.image.load('Resources\\' + ico).convert_alpha()
 		display.blit(icoI, (x-(sizeex/2), y-(sizeey/2), 0, 0))
-	text(caption, x-(sizeex/4), y-(sizeey/4), font, fontSize, fontColor)
+	text(caption, x-(sizeex/4)-5, y-(sizeey/4), font, fontSize, fontColor)
 
 
 _circle_cache = {}
@@ -176,25 +176,40 @@ def jsons(pui):
 ends = 0 
 
 
+ListObjectED = [1, 1]
 
+ObjectWiew = [['Nblock1', 'Block'], ['Mblock1', 'Block'], ['Mblock2', 'Block'], ['Mblock3', 'Block'], ['Mblock4', 'Block'], ['Mblock5', 'Block'], ['Mblock6', 'Block'], ['Mblock7', 'Block'], ['Mblock8', 'Block'], ['NHalfblock1', 'Half Block'], ['Nspike1', 'Spike'], ['Lspike1', 'Half Spike']]
 
+Rot = 0
+EDgrid = 1
 
 def editor():
+	global EDgrid
+	global ends
+	global Rot
+	global ObjectWiew
 	global mouseP
 	global cam
 	global op
-	if event.type == pygame.MOUSEBUTTONDOWN and edit['select'] != 'none' and round((mouseP[0]-cam['x']-22.5)/45) > -1 and -1*(round((mouseP[1]-cam['y']-22.5)/45)) > -1 and mouseP[1] < height-150 and mouseP[1] > 80:
+	if EDgrid == 1:
+		for v in range(0, round(width/45)+round(cam['x']/-45)):
+			if cam['x']+(v*45) > 0 and cam['x']+(v*45) < width:
+				pygame.draw.line(display, (0, 0, 0), (cam['x']+(v*45), 0), (cam['x']+(v*45), height), 1)
+		for v in range(0, round(height/45)+round(cam['y']/45)):
+			if cam['y']+(v*-45) > 0 and cam['y']+(v*-45) < height:
+				pygame.draw.line(display, (0, 0, 0), (0, cam['y']+(v*-45)), (width, cam['y']+(v*-45)), 1)
+	if event.type == pygame.MOUSEBUTTONDOWN and edit['select'] != 'none' and round((mouseP[0]-cam['x']-22.5)/45) > -1 and -1*(round((mouseP[1]-cam['y']-22.5)/45)) > -1 and mouseP[1] < height-200 and mouseP[1] > 80:
 		if edit['select'] != 'Del':
-			code['Code'].append({'Object': edit['select'], 'xo': round((mouseP[0]-cam['x']-22.5)/45), 'yo': -1*(round((mouseP[1]-cam['y']-22.5)/45)), 'size': 45})
+			code['Code'].append({'Object': edit['select'], 'xo': round((mouseP[0]-cam['x']-22.5)/45), 'yo': -1*(round((mouseP[1]-cam['y']-22.5)/45)), 'size': 45, 'rots': Rot})
 		else:
 			for s in range(0, len(code['Code'])):
 				if code['Code'][s]['xo'] == round((mouseP[0]-cam['x']-22.5)/45) and code['Code'][s]['yo'] == -1*(round((mouseP[1]-cam['y']-22.5)/45)):
 					code['Code'].pop(s)
 					break
 		time.sleep(0.1)
-	s = pygame.Surface((width,height-150), pygame.SRCALPHA)
+	s = pygame.Surface((width,height-200), pygame.SRCALPHA)
 	s.fill((0,0,0,128))                       
-	display.blit(s, (0, height-150))
+	display.blit(s, (0, height-200))
 	cam['x'] = cam['vx']
 	cam['y'] = cam['vy'] + height-300
 	if keyboard.is_pressed('left arrow') or keyboard.is_pressed('a'):
@@ -205,15 +220,76 @@ def editor():
 		cam['vy'] += 10
 	if keyboard.is_pressed('down arrow') or keyboard.is_pressed('s'):
 		cam['vy'] -= 10
-	button('Block', width/2, height/1.2, 'PUSAB.otf', 24, (255, 255, 255), 'ED Nblock1')
-	if nameS == 'ED Nblock1':
-		edit['select'] = nameS[3:]
-	button('Spike', width/2, height/1.2+45, 'PUSAB.otf', 24, (255, 255, 255), 'ED Nspike1')
-	if nameS == 'ED Nspike1':
-		edit['select'] = nameS[3:]
-	button('Delete', width/2, height/1.2+90, 'PUSAB.otf', 24, (255, 255, 255), 'ED Del', colorB = [(250, 0, 0), (200, 0, 0)])
+
+
+	button('<', 180, height-100, 'PUSAB.otf', 36, (255, 255, 255), 'backOb ED', sizes = [45, 45])
+	if nameS == "backOb ED":
+		ListObjectED[0] -= 1
+		if ListObjectED[0] < 1:
+			ListObjectED[0] = ListObjectED[1]
+
+	button('>', width - 180, height-100, 'PUSAB.otf', 36, (255, 255, 255), 'nextOb ED', sizes = [45, 45])
+	if nameS == "nextOb ED":
+		ListObjectED[0] += 1
+		if ListObjectED[0] > ListObjectED[1]:
+			ListObjectED[0] = 1
+
+	
+
+	
+
+
+	if ListObjectED[0] == 1:
+		ly = 0
+		for l in range(0, len(ObjectWiew)):
+			if l > 8:
+				ly = 75
+				button('', width/4 - 10 + (65*(l-9)), height/1.25 + ly, 'PUSAB.otf', 24, (255, 255, 255), 'ED ' + ObjectWiew[l][0], sizes = [45, 45], ico = "Objects\\" + ObjectWiew[l][0] + ".png")
+			else:
+				button('', width/4 - 10 + (65*l), height/1.25 + ly, 'PUSAB.otf', 24, (255, 255, 255), 'ED ' + ObjectWiew[l][0], sizes = [45, 45], ico = "Objects\\" + ObjectWiew[l][0] + ".png")
+			if nameS == 'ED ' + ObjectWiew[l][0]:
+				edit['select'] = nameS[3:]
+
+
+	
+
+
+
+
+
+	if EDgrid == 0:
+		button('Grid', 80, height-100+20, 'PUSAB.otf', 16, (255, 255, 255), 'ED Grid', colorB = [(250, 0, 0), (200, 0, 0)], colorBS = [(250, 0, 0), (0, 200, 0)], sizes = [105, 24])
+		if nameS == 'ED Grid':
+			EDgrid = 1
+	else:
+		button('Grid', 80, height-100+20, 'PUSAB.otf', 16, (255, 255, 255), 'ED Grid', colorB = [(0, 250, 0), (0, 200, 0)], colorBS = [(0, 250, 0), (200, 0, 0)], sizes = [105, 24])
+		if nameS == 'ED Grid':
+			EDgrid = 0
+	button('Delete', 80, height-100-20, 'PUSAB.otf', 16, (255, 255, 255), 'ED Del', colorB = [(250, 0, 0), (200, 0, 0)])
 	if nameS == 'ED Del':
 		edit['select'] = nameS[3:]
+
+	
+
+
+	text(str(Rot), width - 80, height-100 - 30, 'PUSAB.otf', 24, (255, 255, 255))
+
+	button('-90', width - 115, height-100 + 30, 'PUSAB.otf', 16, (255, 255, 255), 'ED Rot-', sizes = [45, 45])
+	if nameS == 'ED Rot-':
+		Rot -= 90
+		if Rot < 0:
+			Rot = 270
+	button('+90', width - 45, height-100 + 30, 'PUSAB.otf', 16, (255, 255, 255), 'ED Rot+', sizes = [45, 45])
+	if nameS == 'ED Rot+':
+		Rot += 90
+		if Rot > 360:
+			Rot = 90
+
+
+
+
+
+
 	button('Save', width/1.1 - 200, 45, 'PUSAB.otf', 24, (255, 255, 255), 'ED Save')
 	if nameS == 'ED Save':
 		try:
@@ -273,7 +349,46 @@ def peCColor(types, colorRGB, name, u):
 end = []
 
 
+def HitBoxe(Object, Temp):
+	global player
+	global toch
+	if Object == 'Block':
+		if player['y'] > Temp[2] - Temp[3] - Temp[3]/8 and player['y'] < Temp[2] + Temp[3]/2 and player['x'] < Temp[1] + Temp[3] - Temp[3]/6 - 1 and player['x'] > Temp[1] - Temp[3] + Temp[3]/6 + 1:
+			if player['y'] > Temp[2] - Temp[3] and player['y'] < Temp[2] + Temp[3]/2 and player['x'] < Temp[1] + Temp[3] - Temp[3]/8 - 1 and player['x'] > Temp[1] - Temp[3] + Temp[3]/8 + 1:
+				player['y'] = Temp[2] - Temp[3]
+				player['vy'] = -1
+				toch += 1
+		else:
+			if player['x'] < Temp[1] + Temp[3] + 1 and player['x'] > Temp[1] - Temp[3]/2 and player['y'] > Temp[2] - Temp[3] + Temp[3]/8 + 1 and player['y'] < Temp[2] + Temp[3] - Temp[3]/8 - 1:
+				player['x'] = Temp[1] + Temp[3]
+			if player['x'] < Temp[1] + Temp[3]/2 and player['x'] > Temp[1] - Temp[3] - 1 and player['y'] > Temp[2] - Temp[3] + Temp[3]/8 + 1 and player['y'] < Temp[2] + Temp[3] - Temp[3]/8 - 1:
+				player['x'] = Temp[1] - Temp[3]
+			if player['y'] > Temp[2] - Temp[3]/2 and player['y'] < Temp[2] + Temp[3] - 1 and player['x'] < Temp[1] + Temp[3] - Temp[3]/8 - 1 and player['x'] > Temp[1] - Temp[3] + Temp[3]/8 + 1:
+				player['y'] = Temp[2]
+	if Object == 'Half Block':
+		if player['y'] > Temp[2] - Temp[3] - Temp[3]/8 and player['y'] < Temp[2] + Temp[3]/3 and player['x'] < Temp[1] + Temp[3] - Temp[3]/6 - 1 and player['x'] > Temp[1] - Temp[3] + Temp[3]/6 + 1:
+			if player['y'] > Temp[2] - Temp[3] and player['y'] < Temp[2] + Temp[3]/3 and player['x'] < Temp[1] + Temp[3] - Temp[3]/8 - 1 and player['x'] > Temp[1] - Temp[3] + Temp[3]/8 + 1:
+				player['y'] = Temp[2] - Temp[3]
+				player['vy'] = -1
+				toch += 1
+		else:
+			if player['x'] < Temp[1] + Temp[3] + 1 and player['x'] > Temp[1] - Temp[3]/2 and player['y'] > Temp[2] - Temp[3] + Temp[3]/16 + 1 and player['y'] < Temp[2] + Temp[3] - Temp[3]/16 - 1:
+				player['x'] = Temp[1] + Temp[3]
+			if player['x'] < Temp[1] + Temp[3]/2 and player['x'] > Temp[1] - Temp[3] - 1 and player['y'] > Temp[2] - Temp[3] + Temp[3]/16 + 1 and player['y'] < Temp[2] + Temp[3] - Temp[3]/16 - 1:
+				player['x'] = Temp[1] - Temp[3]
+			if player['y'] > Temp[2] - Temp[3]/2 and player['y'] < Temp[2] + Temp[3]/2 - 1 and player['x'] < Temp[1] + Temp[3] - Temp[3]/8 - 1 and player['x'] > Temp[1] - Temp[3] + Temp[3]/8 + 1:
+				player['y'] = Temp[2]
+	if Object == 'Spike':
+		if player['x'] > Temp[1] - (Temp[3]/1.25) and player['x'] < Temp[1] + (Temp[3]/1.25) and player['y'] > Temp[2] - (Temp[3]/1.25) and player['y'] < Temp[2] + (Temp[3]/1.25):
+			player['x'] = 0
+	if Object == 'Half Spike':
+		if player['x'] > Temp[1] - (Temp[3]/1.25) and player['x'] < Temp[1] + (Temp[3]/1.25) and player['y'] > Temp[2] - (Temp[3]/2.25) and player['y'] < Temp[2] + (Temp[3]/1.25):
+			player['x'] = 0
+
+
+
 def Objects():
+	global ObjectWiew
 	global ends
 	global end
 	global toch
@@ -300,29 +415,12 @@ def Objects():
 
 
 			Temp = [code['Code'][i]['Object'], xs3, ys3*-1, code['Code'][i]['size']]
-			if Temp[0] == 'Nblock1':
-				display.blit(Nblock1img, (cam['x'] + Temp[1], cam['y'] + Temp[2], Temp[3], Temp[3]))
-				if player['y'] > Temp[2] - Temp[3] - Temp[3]/8 and player['y'] < Temp[2] + Temp[3]/2 and player['x'] < Temp[1] + Temp[3] - Temp[3]/6 - 1 and player['x'] > Temp[1] - Temp[3] + Temp[3]/6 + 1:
-					if player['y'] > Temp[2] - Temp[3] and player['y'] < Temp[2] + Temp[3]/2 and player['x'] < Temp[1] + Temp[3] - Temp[3]/8 - 1 and player['x'] > Temp[1] - Temp[3] + Temp[3]/8 + 1:
-						player['y'] = Temp[2] - Temp[3]
-						player['vy'] = -1
-						toch += 1
-				else:
-					if player['x'] < Temp[1] + Temp[3] + 1 and player['x'] > Temp[1] - Temp[3]/2 and player['y'] > Temp[2] - Temp[3] + Temp[3]/8 + 1 and player['y'] < Temp[2] + Temp[3] - Temp[3]/8 - 1:
-						player['x'] = Temp[1] + Temp[3]
-					if player['x'] < Temp[1] + Temp[3]/2 and player['x'] > Temp[1] - Temp[3] - 1 and player['y'] > Temp[2] - Temp[3] + Temp[3]/8 + 1 and player['y'] < Temp[2] + Temp[3] - Temp[3]/8 - 1:
-						player['x'] = Temp[1] - Temp[3]
-					if player['y'] > Temp[2] - Temp[3]/2 and player['y'] < Temp[2] + Temp[3] - 1 and player['x'] < Temp[1] + Temp[3] - Temp[3]/8 - 1 and player['x'] > Temp[1] - Temp[3] + Temp[3]/8 + 1:
-						player['y'] = Temp[2]
-			if Temp[0] == 'Nspike1':
-				# pygame.draw.rect(display, (0, 125, 255), [
-				# 		cam['x'] + code[2][i]['x'],
-				# 		cam['y'] + code[2][i]['y'],
-				# 		code[2][i]['size'],
-				# 		code[2][i]['size']])
-				display.blit(Nspike1img, (cam['x'] + Temp[1], cam['y'] + Temp[2], Temp[3], Temp[3]))
-				if player['x'] > Temp[1] - (Temp[3]/1.25) and player['x'] < Temp[1] + (Temp[3]/1.25) and player['y'] > Temp[2] - Temp[3] and player['y'] < Temp[2] + (Temp[3]/1.25):
-					player['x'] = 0
+			for u in range(0, len(ObjectWiew)):
+				if Temp[0] == ObjectWiew[u][0]:
+					img = pygame.image.load('Resources\\Objects\\' + Temp[0] + '.png').convert_alpha()
+					img = pygame.transform.rotate(img, code['Code'][i]['rots'])
+					display.blit(img, (cam['x'] + Temp[1], cam['y'] + Temp[2], Temp[3], Temp[3]))
+					HitBoxe(ObjectWiew[u][1], Temp)
 			if Temp[0] == 'text':
 				text(code['Code'][i]['caption'], cam['x'] + Temp[1], cam['y'] - Temp[1], 'PUSAB.otf', Temp[3], code['Code'][i]['color'])
 			end.append(Temp[1])
@@ -336,9 +434,7 @@ def Objects():
 							height])
 			text('END', cam['x'] + ends + 50, height/2, 'PUSAB.otf', 36, (255, 255, 255))
 
-			
-Nblock1img = pygame.image.load('Resources\\Objects\\Nblock1.png').convert_alpha()
-Nspike1img = pygame.image.load('Resources\\Objects\\Nspike1.png').convert_alpha()
+
 
 
 
@@ -454,6 +550,7 @@ def PlayerIco():
 PlayerIco()
 
 ListColorP = [1, 2]
+LvlPage = 1
 
 while GameP:
 	
@@ -621,24 +718,53 @@ while GameP:
 			except Exception:
 				window.destroy()
 
+	if main == 'Company':
+		button('<', 45, 45, 'PUSAB.otf', 36, (255, 255, 255), 'BACKmain', sizes = [45, 45])
+		if nameS == 'BACKmain':
+			main = 'main'
+		lvls = os.listdir('Level\\Company\\')
 
-	
-	if main == 'main':
-		Logoico = (width/2-1486/4, height/4-399/4, 0, 0)
-		display.blit(Logo, Logoico)
-		button('', width/2-5, height/2+100, 'PUSAB.otf', 24, (255, 255, 255), 'play', sizes = [150, 150], ico = "main\\Play.png")
-		if nameS == 'play':
-			jsons("Level\\Company\\Stereo Madness.json")
+		button('<', 75, height/2, 'PUSAB.otf', 36, (255, 255, 255), 'backCLVL', sizes = [45, 45])
+		if nameS == 'backCLVL':
+			LvlPage -= 1
+			if LvlPage < 1:
+				LvlPage = len(lvls)
+		button('>', width-75, height/2, 'PUSAB.otf', 36, (255, 255, 255), 'nextCLVL', sizes = [45, 45])
+		if nameS == 'nextCLVL':
+			LvlPage += 1
+			if LvlPage > len(lvls):
+				LvlPage = 1
+
+
+
+		button('', width - width/2, height/2, 'PUSAB.otf', 24, (255, 255, 255), 'PlayLVL', sizes = [764, 212], ico = "Company\\BG-Com-LVL.png", inv = 1)
+		if nameS == 'PlayLVL':
+			jsons("Level\\Company\\" + lvls[LvlPage-1])
 			edit['rule'] = False
 			edit['mode'] = 0
 			player['x'] = 0
 			player['y'] = 0
 			player['vy'] = -1
-		button('', width - width/3.25, height/2+100, 'PUSAB.otf', 24, (255, 255, 255), 'mores', sizes = [125, 125], ico = "main\\More.png")
+
+
+		button('', width/5, height/2, 'PUSAB.otf', 24, (255, 255, 255), '', sizes = [75, 75], ico = "IcoH\\easy.png", inv = 1)
+		button('', width - width/6.8, height/2.55, 'PUSAB.otf', 24, (255, 255, 255), '', sizes = [50, 50], ico = "ico\\star.png", inv = 1)
+		text('1', width - width/5, height/2.65, 'PUSAB.otf', 36, (255, 255, 0))
+		text(lvls[LvlPage-1][:-5], width/2-200, height/4+height/4.5, 'PUSAB.otf', 48, (255, 255, 255))
+
+	
+	if main == 'main':
+		Logoico = (width/2-1486/4, height/4-399/4, 0, 0)
+		display.blit(Logo, Logoico)
+		button('', width/2-5, height/2+100, 'PUSAB.otf', 24, (255, 255, 255), 'play', sizes = [150, 150], ico = "main\\Play.png", inv = 1)
+		if nameS == 'play':
+			main = 'Company'
+			
+		button('', width - width/3.25, height/2+100, 'PUSAB.otf', 24, (255, 255, 255), 'mores', sizes = [125, 125], ico = "main\\More.png", inv = 1)
 		if nameS == 'mores':
 			main = 'more'
 			
-		button('', width/3.25, height/2+100, 'PUSAB.otf', 24, (255, 255, 255), 'pe', sizes = [125, 125], ico = "main\\Skins.png")
+		button('', width/3.25, height/2+100, 'PUSAB.otf', 24, (255, 255, 255), 'pe', sizes = [125, 125], ico = "main\\Skins.png", inv = 1)
 		if nameS == 'pe':
 			main = 'pe'
 		button('Import', width/2, height/1.2, 'PUSAB.otf', 24, (255, 255, 255), 'import')
@@ -662,7 +788,7 @@ while GameP:
 
 	
 		
-	text('v0.2', width/2-30, 24*1, 'PUSAB.otf', 24, (255, 255, 0))
+	text('v0.3', width/2-30, 24*1, 'PUSAB.otf', 24, (255, 255, 0))
 
 	# text('Mouse X: ' + str(mouseP[0]), width/2, 24*3, 'PUSAB.otf', 24, (0, 0, 0))
 	# text('Mouse Y: ' + str(mouseP[1]), width/2, 24*4, 'PUSAB.otf', 24, (0, 0, 0))
@@ -673,11 +799,7 @@ while GameP:
 	# text('Player VX: ' + str(player['vx']), width/2, 24*3, 'PUSAB.otf', 24, (0, 255, 0))
 	# text('Player VY: ' + str(player['vy']), width/2, 24*4, 'PUSAB.otf', 24, (0, 255, 0))
 
-	# if main == 'Company':
-	# 	s = pygame.Surface((width-(width/5)*2, 200), pygame.SRCALPHA)
-	# 	s.fill((0,0,0,175))                       
-	# 	display.blit(s, (width/5, height/4))
-	# 	text('Stereo Madness', width/2-200, height/4+height/8, 'PUSAB.otf', 36, (255, 255, 255))
+	
 
 	
 	
